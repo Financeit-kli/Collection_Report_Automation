@@ -6,12 +6,12 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import pandas as pd
 import base64
-from array import array
+from datetime import date, timedelta
 from io import BytesIO
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 GSCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = '1Es_0PL-Q4lNgUB4N7wz9s2vPyoaUn9elF0cpFRQLFNE'
+SPREADSHEET_ID = '1Fd8Xr-sWA2xN016DecL9mkf8xVdPIrFn6RNGO6c4rdg'
 
 
 def read_from_gmail():
@@ -69,7 +69,7 @@ def read_from_gmail():
         updates.append(update.iloc[-1].dropna().values.tolist())
 
     # Part 2 Outreach data. Merged results cannot be sent through email so I have to read separately and merge them
-    queries = ["REP-1500-5", "REP-1500-6", "REP-1500-7", "REP-1500-8"]
+    queries = ["REP-1500-5", "REP-1500-6", "REP-1500-7", "REP-1500-8","REP-1500-9"]
     media = []
     for query in queries:
 
@@ -97,7 +97,7 @@ def read_from_gmail():
         str_csv = base64.urlsafe_b64decode(data.encode('UTF-8'))
         update = pd.read_csv(BytesIO(str_csv))
         media.extend(update.iloc[-1].dropna().values.tolist())
-    media = [float(media[0]),float(media[1]),float(media[2]),media[1]/media[0],(media[2]/media[1])-1,float(media[3])]
+    media = [float(media[0]),float(media[1]),float(media[2]),media[1]/media[0],(media[2]/media[1])-1,float(media[3])+float(media[4])]
     updates.append(media)
 
     # Part 3 Active Collection Files. Needs to reformat to fits in the report and avoid null value
@@ -196,6 +196,15 @@ def write_to_sheets(updates):
         range='Outreach Data!B'+str(line),
         body=dict(
             values=[updates[2]]
+        )).execute()
+
+    yesterday = date.today() - timedelta(days=1)
+    adddate = service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        valueInputOption='RAW',
+        range='Outreach Data!A'+str(line),
+        body=dict(
+            values=[[yesterday.strftime("%b %d %Y")]]
         )).execute()
 
 
