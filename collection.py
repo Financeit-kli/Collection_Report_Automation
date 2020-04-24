@@ -1,6 +1,8 @@
 from __future__ import print_function
 import pickle
 import os.path
+from email.mime.text import MIMEText
+
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -9,9 +11,9 @@ import base64
 from datetime import date, timedelta
 from io import BytesIO
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://mail.google.com/']
 GSCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = '1Fd8Xr-sWA2xN016DecL9mkf8xVdPIrFn6RNGO6c4rdg'
+SPREADSHEET_ID = '1IStyQ5gwwnKJQ8Q3OpEkzX17Z_VoCKuI9FQEN8eOg_0'
 
 
 def read_from_gmail():
@@ -128,6 +130,14 @@ def read_from_gmail():
         update = pd.read_csv(BytesIO(str_csv))
         updates.append(update.drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
 
+    notice = MIMEText('Report has been updated')
+    notice['to'] = 'kli@financeit.io;gracine@financeit.io'
+    notice['from'] = 'kli@financeit.io'
+    notice['subject'] = 'Report has been updated'
+    raw_message = base64.urlsafe_b64encode(notice.as_string().encode("utf-8"))
+    message = {'raw': raw_message.decode("utf-8")}
+    send_message = (service.users().messages().send(userId='me', body=message)
+               .execute())
     write_to_sheets(updates)
 
 
