@@ -70,28 +70,34 @@ def read_from_gmail():
         str_csv = base64.urlsafe_b64decode(data.encode('UTF-8'))
         update = pd.read_csv(BytesIO(str_csv))
         wip.append(update)
+
     # Part 1 Arrangement by Status
-    updates.append(update.iloc[-1].dropna().values.tolist())
+    updates.append(wip[0].iloc[-1].dropna().values.tolist())
+    updates.append(wip[1].iloc[-1].dropna().values.tolist())
+
 
     # Part 2 Outreach data. Merged results cannot be sent through email so I have to read separately and merge them
+    media = []
+    for x in range(4, 9):
+        media.extend(wip[x].iloc[-1].dropna().values.tolist())
 
-    media.extend(update.iloc[-1].dropna().values.tolist())
     media = [float(media[0]),float(media[1]),float(media[2]),media[1]/media[0],(media[2]/media[1])-1,float(media[3])+float(media[4])]
     updates.append(media)
 
     # Part 3 Active Collection Files. Needs to reformat to fits in the report and avoid null value
 
-    updates.append(update.drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
+    updates.append(wip[2].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
+    updates.append(wip[3].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
 
-    # notice = MIMEText('Report has been updated')
-    # notice['to'] = 'kli@financeit.io;gracine@financeit.io'
-    # notice['from'] = 'kli@financeit.io'
-    # notice['subject'] = 'Report has been updated'
-    # raw_message = base64.urlsafe_b64encode(notice.as_string().encode("utf-8"))
-    # message = {'raw': raw_message.decode("utf-8")}
+    notice = MIMEText('Report has been updated')
+    notice['to'] = 'kli@financeit.io;gracine@financeit.io'
+    notice['from'] = 'kli@financeit.io'
+    notice['subject'] = 'Report has been updated'
+    raw_message = base64.urlsafe_b64encode(notice.as_string().encode("utf-8"))
+    message = {'raw': raw_message.decode("utf-8")}
     send_message = (service.users().messages().send(userId='me', body=message)
                .execute())
-    # write_to_sheets(updates)
+    write_to_sheets(updates)
 
 
 
