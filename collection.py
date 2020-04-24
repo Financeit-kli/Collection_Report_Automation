@@ -89,6 +89,10 @@ def read_from_gmail():
     updates.append(wip[2].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
     updates.append(wip[3].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
 
+    # Part 4 Update report
+    write_to_sheets(updates)
+
+    # Part 5 Send Email notice
     notice = MIMEText('Report has been updated')
     notice['to'] = 'kli@financeit.io;gracine@financeit.io'
     notice['from'] = 'kli@financeit.io'
@@ -97,7 +101,7 @@ def read_from_gmail():
     message = {'raw': raw_message.decode("utf-8")}
     send_message = (service.users().messages().send(userId='me', body=message)
                .execute())
-    write_to_sheets(updates)
+
 
 
 
