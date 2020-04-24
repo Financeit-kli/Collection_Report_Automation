@@ -40,8 +40,9 @@ def read_from_gmail():
 
     # Call the Gmail API
 
-    # Part 1 Arrangement by Status
-    queries = ["REP-1500-1", "REP-1500-2"]
+
+    queries = ["REP-1500-1", "REP-1500-2", "REP-1500-3", "REP-1500-4", "REP-1500-5", "REP-1500-6", "REP-1500-7", "REP-1500-8", "REP-1500-9"]
+    wip = []
     updates = []
     for query in queries:
 
@@ -68,77 +69,29 @@ def read_from_gmail():
             data = att['data']
         str_csv = base64.urlsafe_b64decode(data.encode('UTF-8'))
         update = pd.read_csv(BytesIO(str_csv))
-        updates.append(update.iloc[-1].dropna().values.tolist())
+        wip.append(update)
+    # Part 1 Arrangement by Status
+    updates.append(update.iloc[-1].dropna().values.tolist())
 
     # Part 2 Outreach data. Merged results cannot be sent through email so I have to read separately and merge them
-    queries = ["REP-1500-5", "REP-1500-6", "REP-1500-7", "REP-1500-8","REP-1500-9"]
-    media = []
-    for query in queries:
 
-        result = service.users().messages().list(userId='me', q=query).execute()
-        msgs = result['messages']
-        msg_ids = [msg['id'] for msg in msgs]
-
-        messageId = msg_ids[0]
-        msg = service.users().messages().get(userId='me', id=messageId).execute()
-        parts = msg.get('payload').get('parts')
-        all_parts = []
-        for p in parts:
-            if p.get('parts'):
-                all_parts.extend(p.get('parts'))
-            else:
-                all_parts.append(p)
-
-        data = p['body'].get('data')
-        attachmentId = p['body'].get('attachmentId')
-
-        if not data:
-            att = service.users().messages().attachments().get(
-                userId='me', id=attachmentId, messageId=messageId).execute()
-            data = att['data']
-        str_csv = base64.urlsafe_b64decode(data.encode('UTF-8'))
-        update = pd.read_csv(BytesIO(str_csv))
-        media.extend(update.iloc[-1].dropna().values.tolist())
+    media.extend(update.iloc[-1].dropna().values.tolist())
     media = [float(media[0]),float(media[1]),float(media[2]),media[1]/media[0],(media[2]/media[1])-1,float(media[3])+float(media[4])]
     updates.append(media)
 
     # Part 3 Active Collection Files. Needs to reformat to fits in the report and avoid null value
-    queries = ["REP-1500-3", "REP-1500-4"]
-    for query in queries:
-        result = service.users().messages().list(userId='me', q=query).execute()
-        msgs = result['messages']
-        msg_ids = [msg['id'] for msg in msgs]
 
-        messageId = msg_ids[0]
-        msg = service.users().messages().get(userId='me', id=messageId).execute()
-        parts = msg.get('payload').get('parts')
-        all_parts = []
-        for p in parts:
-            if p.get('parts'):
-                all_parts.extend(p.get('parts'))
-            else:
-                all_parts.append(p)
+    updates.append(update.drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
 
-        data = p['body'].get('data')
-        attachmentId = p['body'].get('attachmentId')
-
-        if not data:
-            att = service.users().messages().attachments().get(
-                userId='me', id=attachmentId, messageId=messageId).execute()
-            data = att['data']
-        str_csv = base64.urlsafe_b64decode(data.encode('UTF-8'))
-        update = pd.read_csv(BytesIO(str_csv))
-        updates.append(update.drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
-
-    notice = MIMEText('Report has been updated')
-    notice['to'] = 'kli@financeit.io;gracine@financeit.io'
-    notice['from'] = 'kli@financeit.io'
-    notice['subject'] = 'Report has been updated'
-    raw_message = base64.urlsafe_b64encode(notice.as_string().encode("utf-8"))
-    message = {'raw': raw_message.decode("utf-8")}
+    # notice = MIMEText('Report has been updated')
+    # notice['to'] = 'kli@financeit.io;gracine@financeit.io'
+    # notice['from'] = 'kli@financeit.io'
+    # notice['subject'] = 'Report has been updated'
+    # raw_message = base64.urlsafe_b64encode(notice.as_string().encode("utf-8"))
+    # message = {'raw': raw_message.decode("utf-8")}
     send_message = (service.users().messages().send(userId='me', body=message)
                .execute())
-    write_to_sheets(updates)
+    # write_to_sheets(updates)
 
 
 
