@@ -89,13 +89,17 @@ def read_from_gmail():
 
     updates.append(wip[2].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
     updates.append(wip[3].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
+    if len(updates[3])<20 or len(updates[4])<20:
+        error = " There're Missing Rows"
+    else:
+        error = " "
 
 
     # Part 4 Update report
     write_to_sheets(updates)
 
     # Part 5 Send Email notice
-    notice = MIMEText('Report has been updated')
+    notice = MIMEText('Report has been updated '+error)
     notice['to'] = 'kli@financeit.io;gracine@financeit.io;kevin.li.yao@gmail.com'
     notice['from'] = 'kli@financeit.io'
     notice['subject'] = 'Report has been updated'
