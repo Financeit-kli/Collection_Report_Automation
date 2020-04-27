@@ -183,7 +183,7 @@ def write_to_sheets(updates):
         valueInputOption='RAW',
         range='Outreach Data!A'+str(line),
         body=dict(
-            values=[[yesterday.strftime("%B %d %Y")]]
+            values=[[yesterday.strftime('%m/%d/%Y')]]
         )).execute()
 
     adddate = service.spreadsheets().values().update(
@@ -191,7 +191,7 @@ def write_to_sheets(updates):
         valueInputOption='RAW',
         range='Arrangement Data!A' + str(line),
         body=dict(
-            values=[[yesterday.strftime("%B %d %Y")]]
+            values=[[yesterday.strftime('%m/%d/%Y')]]
         )).execute()
 
 
