@@ -87,19 +87,26 @@ def read_from_gmail():
 
     # Part 3 Active Collection Files. Needs to reformat to fits in the report and avoid null value
 
-    updates.append(wip[2].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
-    updates.append(wip[3].drop([0]).drop(['Days in Arrears Buckets'], axis=1).fillna(0).values.flatten().tolist())
-    if len(updates[3])<20 or len(updates[4])<20:
-        error = " There're Missing Rows"
-    else:
-        error = " "
+    for i in range(2,4):
+
+        wip[i].set_index('Days in Arrears Buckets',inplace=True)
+        rep = pd.DataFrame(
+            index=['charged_off', 'in_arrears', 'in_arrears_arrangements', 'in_collections', 'in_default'],
+            columns=['1. 0-30', '2. 31-60', '3. 61-90', '4. 90+'])
+        for col in ['1. 0-30', '2. 31-60', '3. 61-90', '4. 90+']:
+            for idx in ['charged_off', 'in_arrears', 'in_arrears_arrangements', 'in_collections', 'in_default']:
+                try:
+                    rep[col][idx] = wip[i][col][idx]
+                except KeyError:
+                    rep[col][idx] = 0
+        updates.append(rep.fillna(0).values.flatten().tolist())
 
 
     # Part 4 Update report
     write_to_sheets(updates)
 
     # Part 5 Send Email notice
-    notice = MIMEText('Report has been updated '+error)
+    notice = MIMEText('Report has been updated')
     notice['to'] = 'kli@financeit.io;gracine@financeit.io;kevin.li.yao@gmail.com'
     notice['from'] = 'kli@financeit.io'
     notice['subject'] = 'Report has been updated'
