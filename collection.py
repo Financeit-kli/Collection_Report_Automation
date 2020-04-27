@@ -72,11 +72,12 @@ def read_from_gmail():
         wip.append(update)
 
     # Part 1 Arrangement by Status
-    updates.append(wip[0].iloc[-1].dropna().values.tolist())
+    updates.append(wip[0].iloc[-1].str.replace('$','').str.replace(',', '').astype(float).tolist())
     updates.append(wip[1].iloc[-1].dropna().values.tolist())
 
 
     # Part 2 Outreach data. Merged results cannot be sent through email so I have to read separately and merge them
+    # Add checking of lines here. If lines not equal to 5, it should fail
     media = []
     for x in range(4, 9):
         media.extend(wip[x].iloc[-1].dropna().values.tolist())
